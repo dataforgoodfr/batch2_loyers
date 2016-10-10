@@ -1,0 +1,18 @@
+***********************
+Description de la table du scraping de pap.fr
+***********************
+url : l'url de l'annonce scrapée
+date : date de parution de l'annonce
+title : Le titre de l'annonce (très bref en général)
+price : loyer (par mois) en euros, charges comprises
+coord : latitude et longitude (si disponible)
+surface : la surface du logement, en mètres carrés
+text : Un descriptif plus détaillé du logement. Une idée plus précise de l'emplacement est possible par le mining de ce texte
+furn : Indique si meublé ou non (True/False)
+rooms : le nomnre de pièces
+bedrooms : le nombre de chambres
+ref_n : la référence de l'annonce
+
+A déterminer / estimer :
+charges : charges en euros, par mois
+construction_year : année de construction du logement
