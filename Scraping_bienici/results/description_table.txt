@@ -1,0 +1,28 @@
+***********************
+Description de la table du scraping de bienici.com
+***********************
+
+url : l'url de l'annonce scrapée
+scraping_date : la date et l'heure du scraping
+title : Le titre de l'annonce (très bref en général)
+price : loyer (par mois) en euros, charges comprises. ATTENTION : pour la grande majorité des annonces, il s'agit d'un float. Mais dans quelques cas, une fourchette de prix est donnée. On a alors du texte
+charges : charges en euros, par mois
+place : une indication (souvent vague) du lieu du logement
+surface : la surface du logement, en mètres carrés
+construction_year : année de construction du logement
+description : Un descriptif plus détaillé du logement. Une idée plus précise de l'emplacement est possible par le mining de ce texte
+number_pictures : Le nombre de photos du logement
+furnished : Indique si meublé ou non. Je considère que s'il n'est pas explicitement indiqué que le logement est meublé, il ne l'est pas
+numbe_rooms : le nomnre de pièces
+number_bedrooms : le nombre de chambres
+number_bathrooms : le nombre de salles de bain
+floor : l'étage auquel se trouve le logement
+heating : indication sur le type de chauffage
+seller : le nom de l'organisme proposant le logement
+seller_type : le type de vendeur (Agence, en général)
+ref_annonce : la référence de l'annonce
+publication_date : la date de publication de l'annonce
+infos_quartier : des infos sur le quartier
+other_info : toutes les informations supplémentaires
+
+IMPORTANT : Toutes ces informations ont été déterminées seulement en scrapant le site. Le mining de la description apportera des informations complémentaires.
