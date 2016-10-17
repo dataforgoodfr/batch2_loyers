@@ -1,0 +1,102 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Oct 15 14:27:04 2016
+
+@author: Meng-tih LAM
+"""
+
+from bs4 import BeautifulSoup
+import urllib.request
+import re
+import time
+import pandas as pd
+
+def get_characteristics(url):
+    list_characteristics = {}
+    
+    # URL
+    list_characteristics["URL"] = url
+    
+    # DESCRIPTION
+    with urllib.request.urlopen(url) as url:
+        s = url.read()
+    soup = BeautifulSoup(s, 'html.parser')
+    description = re.compile('(.*)Mise à jour le (.*)Référence annonce AVENDREALOUER : ').search(soup.find_all("div", class_="property-description-main")[0].get_text().replace('\n',' ').replace('\r',' ').rstrip().lstrip()).group(1, 2)
+    list_characteristics["Description"] = description[0].rstrip().lstrip()
+    list_characteristics["Mise à jour"] = description[1].rstrip().lstrip()
+    
+    # CHARACTERISTICS
+    for all_characteristics in soup.find_all("div", class_="property-description-characteristics"):
+        keys = all_characteristics.find_all("span", class_="")
+        values = all_characteristics.find_all("span", class_="r")
+        for i in range(0, len(keys)):
+            key = keys[i].get_text().rstrip().lstrip().replace(':', '')
+            try:
+                value = values[i].get_text().rstrip().lstrip()
+            except:
+                value = "Y"
+            
+            # Specific key contain value
+            if key[0:13] == "Étage du bien":
+                value = key[14:].replace('/', ' sur ')
+                key = "Étage du bien"
+                
+            # If key exist force value to (Y)es
+            if value == "":
+                value = "Y"
+                
+            list_characteristics[key] = value
+            
+    # PRICING
+    for all_pricing in soup.find_all("div", class_="pricing-data"):
+        for pricing in all_pricing.find_all("span"):
+            str_pricing = pricing.get_text().rstrip().lstrip().replace('\n', '')
+            sep_pricing = str_pricing.find(":")
+            if sep_pricing != -1:
+                key = str_pricing[:sep_pricing]
+                value = str_pricing[sep_pricing+1:]
+                list_characteristics[key] = value
+                
+    # LOCATION
+    location = re.compile('"GeoPoint":{"Lat":([0-9.]+),"Lon":([0-9.]+)}').search(soup.find_all("script")[-3].get_text()).group(1, 2)
+    list_characteristics["Latitude"] = location[0]
+    list_characteristics["Longitude"] = location[1]
+
+    return list_characteristics
+
+
+df = pd.DataFrame()
+list_characteristics = {}
+
+avendrealouer = "http://www.avendrealouer.fr/recherche.html?pageIndex=###&searchTypeID=2&localityIds=3-75"
+url_page = avendrealouer.replace("###", '1')
+
+with urllib.request.urlopen(url_page) as url:
+    s = url.read()
+
+soup = BeautifulSoup(s, 'html.parser')
+
+page_text  = soup.find_all("script")[-1].get_text()
+pageSize = int(re.compile('\|(.*)\|(.*)\|').search(page_text).group(1))
+
+for page in range(1, pageSize + 1):
+    url_page = avendrealouer.replace("###", str(page))
+
+    print("\nURL PAGE : ", url_page)
+
+    with urllib.request.urlopen(url_page) as url:
+        s = url.read()
+    soup = BeautifulSoup(s, 'html.parser')
+
+    # Get advertisement list
+    url_list = []
+    for i in soup.find_all("a", class_="picCtnr"):
+        url_list.append('https://www.avendrealouer.fr' + i['href'])
+    
+    # Get datas from each advertisement
+    for i in url_list:
+        print("Getting data from : ", i)
+        list_characteristics = get_characteristics(i)
+        df = df.append(pd.DataFrame.from_dict(list_characteristics, orient='index').transpose())
+
+df.to_csv("Result_20161015_2250.csv", sep=";", index=False)
