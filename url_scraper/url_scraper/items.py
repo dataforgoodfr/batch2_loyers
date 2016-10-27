@@ -11,13 +11,13 @@ from scrapy.utils.python import unicode_to_str
 def u_to_str(text):
     unicode_to_str(text,'latin-1','ignore')
 
-class PapScraperItem(Item):
+class GenericItem(Item):
 
     # text items to be scraped
-    title = Field(output_processor=u_to_str)    # title given by the owner
-    text = Field(output_processor=u_to_str)     # description of the apt
-    sub_area = Field(output_processor=u_to_str)
-    adress = Field(output_processor=u_to_str)
+    title = Field(output_processor=u_to_str)        # title given by the owner
+    text = Field(output_processor=u_to_str)         # description of the apt
+    sub_area = Field(output_processor=u_to_str)     # area of apt
+    adress = Field(output_processor=u_to_str)       # adress
 
     # other
     area = Field()                  # location of the apt
@@ -31,3 +31,9 @@ class PapScraperItem(Item):
     bedrooms = Field()              # number of bedrooms
     url = Field()                   # apt url (for debugging)
     construction_year = Field()
+    city= Field()
+    agence=Field()
+    charges=Field()
+    floor=Field()
+    balcon=Field()
+    terasse=Field()

@@ -1,13 +1,16 @@
 import scrapy, re
-from url_scraper.items import PapScraperItem
+from url_scraper.items import GenericItem
 from geopy.geocoders import Nominatim
 
 class PapSpider(scrapy.Spider):
     name = "pap_spider"
+    custom_settings = {
+        'ITEM_PIPELINES': {'url_scraper.pipelines.PapScraperPipeline': 1,}
+    }
 
     def parse(self, response):
         # scrape apt page
-        item = PapScraperItem()
+        item = GenericItem()
 
         # cleaning -> pipeline
         item['title'] = response.xpath('//span[@class="title"]/text()').extract_first()
@@ -42,12 +45,14 @@ class PapSpider(scrapy.Spider):
             item['adress'] = location.address
             # try to get the year of construction
             ma_url = 'http://www.meilleursagents.com/prix-immobilier/paris-75000/'
-            yield scrapy.http.FormRequest(ma_url,
+            request = scrapy.http.FormRequest(url=ma_url,
                                           formdata={'q': item['adress']},
                                           callback=self.after_search)
-
+            request.meta['item'] = item
+            yield request
         yield item
 
     def after_search(self, response):
+        item = response.meta['item']
         item['construction_year'] = response.xpath("//table[@class='facts']/text()")
         yield item

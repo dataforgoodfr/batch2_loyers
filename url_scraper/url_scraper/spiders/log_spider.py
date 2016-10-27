@@ -2,7 +2,7 @@
 import scrapy
 
 
-class LogSpiderSpider(scrapy.Spider):
+class LogSpider(scrapy.Spider):
     name = "log_spider"
     allowed_domains = ["seloger.fr"]
     start_urls = (

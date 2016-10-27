@@ -51,7 +51,7 @@ class PapScraperPipeline(object):
 
         def text_cleaner(text):
             # remove trailing \n and \r
-            return re.sub('\n|\r', '', ''.join(text))
+            return re.sub("\n|\r", "", "".join(text))
 
         # parse price
         item['price'] = int(''.join(re.findall('\d+', item['price'])))
