@@ -5,7 +5,10 @@ from geopy.geocoders import Nominatim
 class PapSpider(scrapy.Spider):
     name = "pap_spider"
     custom_settings = {
-        'ITEM_PIPELINES': {'url_scraper.pipelines.PapScraperPipeline': 1,}
+        'ITEM_PIPELINES' : {'url_scraper.pipelines.PapScraperPipeline': 1,},
+        'FEED_FORMAT' : 'json',
+        'FEED_URI' : 'output.json',
+        'FEED_EXPORTERS' : {'json': 'scrapy.contrib.exporter.JsonItemExporter',}
     }
 
     def parse(self, response):
@@ -37,22 +40,46 @@ class PapSpider(scrapy.Spider):
         # parse coord / district
         regex = r"[-+]?\d*\.\d+|\d+"
         if item['coord']:
-            # extract coord
             item['coord'] = map(float, re.findall(regex, item['coord'])[:2])
-            # find adress
-            geolocator = Nominatim()
-            location = geolocator.reverse(item['coord'])
-            item['adress'] = location.address
-            # try to get the year of construction
-            ma_url = 'http://www.meilleursagents.com/prix-immobilier/paris-75000/'
-            request = scrapy.http.FormRequest(url=ma_url,
-                                          formdata={'q': item['adress']},
-                                          callback=self.after_search)
-            request.meta['item'] = item
-            yield request
+            item['adress'] = self.get_adress(item)
+            # item['construction_year'] = get_construction_year(item)
+
         yield item
 
-    def after_search(self, response):
-        item = response.meta['item']
-        item['construction_year'] = response.xpath("//table[@class='facts']/text()")
-        yield item
+    def get_adress(self, item):
+        # find adress from geolocator
+        geolocator = Nominatim()
+        location = geolocator.reverse(item['coord'])
+        return location.address
+
+    def get_construction_year(self, adress):
+        # find construction_year from meilleursagents
+        magentsurl = "http://www.meilleursagents.com/prix-immobilier/paris-75000/"
+
+        # load webdriver
+        driver = webdriver.Firefox()
+        driver.get(magentsurl)
+        time.sleep(1)
+
+        # adress input
+        textinput = driver.find_element_by_name('q')
+        textinput.send_keys("3, rue veronese")
+        time.sleep(1)
+
+        # click input box
+        textinput.click()
+        time.sleep(1)
+
+        # hit enter
+        textinput.send_keys(Keys.RETURN)
+        time.sleep(1)
+
+        # get facts
+        facts = driver.find_element_by_xpath("//table").text
+        time.sleep(1)
+
+        # shut down
+        driver.close()
+
+        # dump data
+        return facts
