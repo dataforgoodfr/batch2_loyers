@@ -4,9 +4,7 @@
 
 import scrapy, sys
 from scrapy.crawler import CrawlerProcess
-from url_scraper.spiders.pap_spider import PapSpider
-from url_scraper.spiders.lbc_spider import LbcSpider
-from url_scraper.spiders.log_spider import LogSpider
+from url_scraper.spiders.spiders import PapSpider, LogSpider
 from argparse import ArgumentParser
 
 def main(argv):

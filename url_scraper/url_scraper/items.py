@@ -18,6 +18,8 @@ class GenericItem(Item):
     text = Field(output_processor=u_to_str)         # description of the apt
     sub_area = Field(output_processor=u_to_str)     # area of apt
     adress = Field(output_processor=u_to_str)       # adress
+    city = Field(output_processor=u_to_str)
+    agence = Field(output_processor=u_to_str)
 
     # other
     area = Field()                  # location of the apt
@@ -31,9 +33,11 @@ class GenericItem(Item):
     bedrooms = Field()              # number of bedrooms
     url = Field()                   # apt url (for debugging)
     construction_year = Field()
-    city= Field()
-    agence=Field()
-    charges=Field()
-    floor=Field()
-    balcon=Field()
-    terasse=Field()
+    charges = Field()
+    floor = Field()
+    balcon = Field()
+    terasse = Field()
+    agence = Field()
+    charges = Field()
+    heat = Field()                  # 0: individual
+                                    # 1: collective
