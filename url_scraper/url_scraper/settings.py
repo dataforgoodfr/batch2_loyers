@@ -14,7 +14,6 @@ BOT_NAME = 'url_scraper'
 SPIDER_MODULES = ['url_scraper.spiders']
 NEWSPIDER_MODULE = 'url_scraper.spiders'
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'url_scraper (+http://www.yourdomain.com)'
 
@@ -64,9 +63,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'url_scraper.pipelines.PapScraperPipeline': 1,
-}
+#ITEM_PIPELINES = {
+#    'url_scraper.pipelines.PapScraperPipeline': 1,
+#}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

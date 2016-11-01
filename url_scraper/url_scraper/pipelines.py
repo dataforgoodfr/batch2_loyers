@@ -7,51 +7,15 @@
 
 import re, os, requests
 import pandas as pd
-from difflib import SequenceMatcher
+from url_scraper.utils import get_sub_area
 
 class PapScraperPipeline(object):
-
-    def __init__(self):
-        self.path = os.path.realpath('.') + "\\url_scraper\\utils\\id_quartier.csv"
-        self.sub_df = pd.read_csv(self.path)
-
-    def similarity(self, a, b):
-        # get string similarity ratio
-        return SequenceMatcher(None, a, b).ratio()
-
-    def get_sub_area(self, item):
-        # try to extract sub_area from coord
-        # else try with text data (takes more time)
-        if item['coord']:
-            words = item['adress'].split(',')
-        else:
-            words = item['text'].split()
-
-        # compare the words in the adress / text to the list of areas
-        max_length = max([len(i) for i in self.sub_df['L_QU']])
-        words = [w for w in words if len(w) <= max_length]
-
-        word_list = []
-        for word in words:
-            subs = self.sub_df[['OBJECTID', 'L_QU']].copy()
-            subs['word'] = word
-            subs['simi'] = subs.apply(lambda x: self.similarity(x['word'], x['L_QU']), axis=1)
-            word_list.append(subs)
-
-        words_df = pd.concat(word_list)
-        max_similarity = words_df['simi'].argmax()
-        tolerance = .85 # similarity threshold
-
-        if max_similarity >= tolerance:
-            return int(self.sub_df['OBJECTID'].loc[max_similarity])
-        else:
-            return None
 
     def process_item(self, item, spider):
 
         def text_cleaner(text):
             # remove trailing \n and \r
-            return re.sub('\n|\r', '', ''.join(text))
+            return re.sub("\n|\r", "", "".join(text))
 
         # parse price
         item['price'] = int(''.join(re.findall('\d+', item['price'])))
@@ -61,7 +25,11 @@ class PapScraperPipeline(object):
         item['title'] = text_cleaner(item['title'])
 
         # find sub_area from coord / text
-        item['sub_area'] = self.get_sub_area(item)
+        if item['coord']:
+            words = item['adress'].split(',')
+        else:
+            words = item['text'].split()
+        item['sub_area'] = get_sub_area(words)
 
         # area
         item['area'] = int(re.findall('\d+', item['area'])[0])
