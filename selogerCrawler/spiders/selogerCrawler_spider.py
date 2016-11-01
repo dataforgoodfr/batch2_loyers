@@ -13,6 +13,7 @@ from scrapy import Item,Field,Spider,http
 from scrapy.selector import Selector
 from unidecode import unidecode
 from math import ceil
+from re import sub
 
 
 
@@ -26,13 +27,16 @@ class SelogercrawlerItem(Item):
 
     titre=Field()
     ville=Field()
+    quartier=Field()
     piece=Field()
     chambre=Field()
     lien=Field()
+    anneeConst=Field()
     superficie=Field()
     agenceImmo=Field()
     prix=Field()
-    charges=Field()
+    chargesType=Field()
+    chargesMontant=Field()
     typeOffre=Field()
     annonceId=Field()
     description=Field()
@@ -41,6 +45,13 @@ class SelogercrawlerItem(Item):
     balcon=Field()
     terasse=Field()
     balcon=Field()
+    Geo_NE_Lat=Field()
+    Geo_NE_Long=Field()
+    Geo_SW_Lat=Field()
+    Geo_SW_Long=Field()
+    Geo_Lat=Field()
+    Geo_Long=Field()
+    Geo_Type=Field()
 
     pass
 
@@ -114,7 +125,7 @@ class seLogerCrawlerSpider(Spider):
                 item['prix']=float(prix.split(" EUR")[0].replace(' ',''))
             except:
                  self.logger.info('Couldnt parse price')
-            
+
             mainDetails=Selector(response).xpath('//*[@id="%s"]/div/div[2]/ul/li/text()'%annonce).extract()
             self.logger.info('\n\n>>>>>Main Details: %s'%mainDetails)
             for detail in mainDetails:
@@ -139,7 +150,6 @@ class seLogerCrawlerSpider(Spider):
             agence1=Selector(response).xpath('//*[@id="%s"]/div/div[3]/div[1]/p/a/img/@alt'%annonce).extract()
             agence2=Selector(response).xpath('//*[@id="%s"]/div/div[3]/div[1]/p/img/@alt'%annonce).extract()
             agence3=Selector(response).xpath('//*[@id="%s"]/div/div[3]/p/span/text()'%annonce).extract()
-
             if len(agence3)!=0 and len(agence1)==0 and len(agence2)==0:
 
                 item['agenceImmo']=unidecode(agence3[0])
@@ -150,7 +160,8 @@ class seLogerCrawlerSpider(Spider):
                 item['agenceImmo']=unidecode(agence1[0]) if len(agence2)==0 else unidecode(agence2[0])
                 item['typeOffre']="Agence"
 
-            item['charges']=Selector(response).xpath('//*[@id="%s"]/div/div[2]/div/a/sup/text()'%annonce).extract()[0]
+            item['chargesType']=Selector(response).xpath('//*[@id="%s"]/div/div[2]/div/a/sup/text()'%annonce).extract()[0]
+
             i=i+1
             request=http.Request(url=item['lien'],dont_filter=True,callback=self.parse3)
             request.meta['item'] = item
@@ -160,9 +171,66 @@ class seLogerCrawlerSpider(Spider):
     def parse3(self,response):
         
         item = response.meta['item']
+        quartier=response.xpath('//div[1]/div[1]/h1/span/@title').extract()
+        item['quartier']=unidecode(quartier[0].split("Quartier ")[-1]) if quartier else ""
+
         description=Selector(response).xpath('//*[@id="detail"]/p[2]/text()').extract()
         item['description']=unidecode(description[0]) if description else ""
+
         details=Selector(response).xpath('//*[@id="detail"]/ol/li/text()').extract()
-        item['detail']=list(map(lambda x:unidecode(' '.join(x.replace("\r\n",'').split())),details))
+        details=list(map(lambda x:unidecode(' '.join(x.replace("\r\n",'').split())),details))
+        item['detail']=details
+        temp=list(map(lambda x:chargesAnneeConstFinder(x,item),details))
+
+        #Polygon Geoposition
+        nePointLat=Selector(response).xpath('//*[@id="resume__map_new"]/@data-boudingbox-northeast-latitude').extract()
+        if nePointLat:
+            item['Geo_NE_Lat']=nePointLat[0]
+        nePointLong=Selector(response).xpath('//*[@id="resume__map_new"]/@data-boudingbox-northeast-longitude').extract()
+        
+        if nePointLong:
+            item['Geo_NE_Long']=nePointLong[0]
+        
+        swPointLat=Selector(response).xpath('//*[@id="resume__map_new"]/@data-boudingbox-southwest-latitude').extract()
+        if swPointLat:
+            item['Geo_SW_Lat']=swPointLat[0]
+        
+        swPointLong=Selector(response).xpath('//*[@id="resume__map_new"]/@data-boudingbox-southwest-longitude').extract()
+        if swPointLong:
+            item['Geo_SW_Long']=swPointLong[0]
+        
+        if nePointLat or nePointLong or swPointLat or swPointLong:
+            item['Geo_Type']="rectangle"
+
+        #Exact Geoposition
+        exactPointLat=Selector(response).xpath('//*[@id="resume__map_new"]/@data-coordonnees-latitude').extract()
+        exactPointLong=Selector(response).xpath('//*[@id="resume__map_new"]/@data-coordonnees-longitude').extract()
+        if exactPointLat:
+            item['Geo_Lat']=exactPointLat[0]
+        
+        if exactPointLong:
+            item['Geo_Long']=exactPointLong[0]
+        
+        if exactPointLat or exactPointLong:
+            item['Geo_Type']="point"
         
         return item
+
+def chargesAnneeConstFinder(x,d):
+    ch=x.lower()
+    if "charges" in ch:
+        temp=sub(r'[^\w. ]', '', ch)
+        temp=temp.split("charges ")[-1]
+        try:
+            temp=float(temp.split(" eur")[0].replace(' ',''))
+            d["chargesMontant"]=temp
+        except:
+            d["charges"]=""
+    
+    if "annee de construction" in ch:
+        temp=sub(r'[^\w. ]', '', ch)
+        temp=temp.split("annee de construction")[-1]
+        try:
+            d['anneeConst']=int(temp)
+        except:
+            d['anneeConst']=""
