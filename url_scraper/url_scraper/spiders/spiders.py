@@ -20,7 +20,8 @@ class PapSpider(scrapy.Spider):
         'ITEM_PIPELINES' : {'url_scraper.pipelines.PapScraperPipeline': 1,},
         'FEED_FORMAT' : 'json',
         'FEED_URI' : 'output.json',
-        'FEED_EXPORTERS' : {'json': 'scrapy.contrib.exporter.JsonItemExporter',}
+        'FEED_EXPORTERS' : {'json': 'scrapy.contrib.exporter.JsonItemExporter',},
+        'USER_AGENT':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36'
     }
 
     def _get_adress(self, item):
@@ -115,7 +116,8 @@ class LogSpider(scrapy.Spider):
     custom_settings = {
         'FEED_FORMAT' : 'json',
         'FEED_URI' : 'output.json',
-        'FEED_EXPORTERS' : {'json': 'scrapy.contrib.exporter.JsonItemExporter',}
+        'FEED_EXPORTERS' : {'json': 'scrapy.contrib.exporter.JsonItemExporter',},
+        'USER_AGENT':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36'
     }
 
     def _get_digits(self, line, dtype):
@@ -129,23 +131,38 @@ class LogSpider(scrapy.Spider):
         item['ref_n'] = self._get_digits(item['ref_n'], int)
 
         item['title'] = response.xpath("//h1[@class='detail-title']/text()").extract()
-        item['title'] = re.sub("\n|\r", "", "".join(item['title']))
+        item['title'] = re.sub("\n|\r", " ", "".join(item['title']))
+        item['title'] = unidecode(''.join(item['title']))
 
         item['price'] = response.xpath("//span[@id='price']/text()").extract_first()
         item['price'] = self._get_digits(item['price'], float)
 
+        latitude = response.xpath("//*[@id='resume__map_new']/@data-coordonnees-latitude").extract_first()
+        longitude = response.xpath("//*[@id='resume__map_new']/@data-coordonnees-longitude").extract_first()
+        ne_latitude = response.xpath("//*[@id='resume__map_new']/@data-boudingbox-northeast-latitude").extract_first()
+        ne_longitude = response.xpath("//*[@id='resume__map_new']/@data-boudingbox-northeast-longitude").extract_first()
+        sw_latitude = response.xpath("//*[@id='resume__map_new']/@data-boudingbox-southwest-latitude").extract_first()
+        sw_longitude = response.xpath("//*[@id='resume__map_new']/@data-boudingbox-southwest-longitude").extract_first()
+
+        if latitude:
+            item['coord'] = [float(latitude), float(longitude)]
+        else:
+            latitude = (float(ne_latitude) + float(sw_latitude)) / 2.
+            longitude = (float(ne_longitude) + float(sw_longitude)) / 2.
+            item['coord'] = [latitude, longitude]
+
         item['url'] = response.url
 
-        float_re = '\d+[,.]\d+'
         details = response.xpath("//li[contains(@class, 'liste__item')]/text()").extract()
 
         for detail in details:
             if 'Pi' in detail:
                 item['rooms'] = self._get_digits(detail, int)
             elif 'Cham' in detail:
-                item['chambre'] = self._get_digits(detail, int)
+                print detail
+                item['bedrooms'] = self._get_digits(detail, int)
             elif 'Surf' in detail:
-                item['surface'] = float(re.findall(float_re, detail.split(" m2")[0].replace(',','.'))[0])
+                item['surface'] = self._get_digits(detail, float)
             elif 'Etage ' in detail:
                 item['floor'] = self._get_digits(detail, int)
             elif 'Ter' in detail:
@@ -155,20 +172,21 @@ class LogSpider(scrapy.Spider):
             elif 'Ann' in detail:
                 item['construction_year'] = self._get_digits(detail, int)
             elif 'Charges' in detail:
-                item['charges'] = float(re.findall(float_re, detail.replace(',','.'))[0])
+                item['charges'] = self._get_digits(detail, float)
 
             if ' Meubl' in detail:
                 item['furn'] = True
             else:
                 item['furn'] = False
 
-            if 'elect' in detal:
+            if 'elect' in detail:
                 item['heat'] = 0
             else:
                 item['heat'] = 1
 
         # get description
         item['text'] = response.xpath("//p[@class='description']/text()").extract()
+        item['text'] = re.sub("\n|\r", " ", "".join(item['text']))
         item['text'] = unidecode(''.join(item['text']))
 
         # try to get sub_area from title
@@ -182,9 +200,7 @@ class LogSpider(scrapy.Spider):
 
         # agence
         item['agence'] = response.xpath("//h3[@class='agence-title']/text()").extract_first()
+        item['agence'] = re.sub("\n|\r", " ", "".join(item['agence']))
         item['agence'] = unidecode(item['agence'])
-
-        # charges
-        item['charges']=Selector(response).xpath('//*[@id="%s"]/div/div[2]/div/a/sup/text()'%annonce).extract()[0]
 
         yield item

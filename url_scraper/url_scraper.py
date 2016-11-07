@@ -15,11 +15,11 @@ def main(argv):
     url = parser.parse_args().input
 
     # get site from url
-    if 'www.pap.fr' in url:
+    if 'pap' in url:
         spider = PapSpider
-    elif 'www.seloger.com' in url:
+    elif 'seloger' in url:
         spider = LogSpider
-    elif 'www.leboncoin.fr' in url:
+    elif 'leboncoin' in url:
         spider = LbcSpider
     else:
         parser.error('url cannot be parsed')
@@ -27,7 +27,7 @@ def main(argv):
 
     # run crawler
     crawler = CrawlerProcess()
-    crawler.crawl(PapSpider, start_urls=[url])
+    crawler.crawl(spider, start_urls=[url])
     crawler.start()
 
 if __name__ == '__main__':
