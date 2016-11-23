@@ -1,0 +1,17 @@
+<!doctype html>
+<title>Scrapr</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<div class=head>
+  <h1>Scrapr</h1>
+  <p> Entrez une adresse dans le champ ci-dessous : </p>
+  <form action="." method="POST">
+    <input type="text" name="input_url">
+    <input type="submit" name="input_url" value="Send">
+  </form>
+</div>
+
+{% if attr %}
+  {% for key, value in attr.items() %}
+    <p>{{ key }} : {{ value }}</p>
+  {% endfor %}
+{% endif %}

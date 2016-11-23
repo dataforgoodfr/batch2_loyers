@@ -1,0 +1,16 @@
+Application permettant de scraper l'url d'une annonce de logement
+sur plusieurs sites de location en France :
+
+* www.leboncoin.fr
+* www.seloger.com
+* www.pap.fr
+
+L'utilisateur copie l'url de l'annonce. Si l'annonce n'est pas dans
+la base de données, l'url est scrappée par l'application.
+
+Les données relatives à l'annonce sont indiquées à l'utilisateur
+(qui peut les modifier manuellement). Une fois les données validées,
+l'application estime le prix du logement.
+
+Le prix estimé est comparé au prix annoncé et le résultat est
+présenté à l'utilisateur.
