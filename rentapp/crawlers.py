@@ -6,11 +6,27 @@ from geopy.geocoders import Nominatim
 from unidecode import unidecode
 from utils.inside_quarters import get_quarter
 
-class BasicItem(object):
+class ConnexionError(Exception):
+    def __str__(self):
+        return "Couldn't reach the advert"
 
+class ExpirationError(Exception):
+    def __str__(self):
+        return "The advert is no longer available."
+
+class ScrapingError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return "Could not scrap %s" %self.value
+
+class BasicScraper(object):
     def __init__(self, url):
+        self.starttime = datetime.datetime.now()
+        self.user_agent = 'dfgapp/0.0.0'
         self.status = None
-        self.tree = None
+        self.url_get = url
+        self.url_post = None
         self.item = {
             'url' : url,
             'scrap_date' : None,
@@ -36,17 +52,31 @@ class BasicItem(object):
             'furnitures' : None,           # needed
         }
 
-class PapCrawler(BasicItem):
-    
-    def __init__(self, url):
-        BasicItem.__init__(self, url)
-        self.starttime = datetime.datetime.now()
+        # try to fetch html
+        self.get_html()
 
-    def get_tree(self):
-        headers = {'user-agent': 'my-app/0.0.1'}
-        response = requests.get(self.item['url'], headers=headers)
-        self.tree = html.fromstring(response.text)
+    def get_html(self):
+        ''' Get the html from scraped page
+        '''
+        headers = {'user-agent': self.user_agent}
+        response = requests.get(self.url_get, headers=headers)
         self.status = response.status_code
+        self.url_post = response.url
+        self.html = html.fromstring(response.text)
+
+        if self.status != 200:
+            raise ConnexionError()
+
+        if self.url_post == 'http://www.seloger.com/':
+            raise ConnexionError()
+
+        if 'expiree' in self.url_post:
+            raise ExpirationError()
+
+class PapCrawler(BasicScraper):
+    
+    def __init__(self, url_get):
+        BasicScraper.__init__(self, url_get)
 
     def get_item(self):
 
@@ -62,7 +92,7 @@ class PapCrawler(BasicItem):
 
         # select raw data into html
         for key, selector in selectors.items():
-            self.item[key] = self.tree.xpath(selector)
+            self.item[key] = self.html.xpath(selector)
 
         # parse the details section
         for elem in self.item['details']:
@@ -126,7 +156,6 @@ class PapCrawler(BasicItem):
         return item
 
     def run(self):
-        self.get_tree()
         self.get_item()
         self.item = self.clean_item(self.item)
         self.now = datetime.datetime.now()
@@ -135,17 +164,10 @@ class PapCrawler(BasicItem):
 
 #############################SELOGER#################################
 
-class SeLogerCrawler(BasicItem):
+class SeLogerCrawler(BasicScraper):
     
-    def __init__(self, url):
-        BasicItem.__init__(self, url)
-        self.starttime = datetime.datetime.now()
-
-    def get_tree(self):
-        headers = {'user-agent': 'my-app/0.0.7'}
-        response = requests.get(self.item['url'], headers=headers)
-        self.tree = html.fromstring(response.text)
-        self.status = response.status_code
+    def __init__(self, url_get):
+        BasicScraper.__init__(self, url_get)
 
     def get_item(self):
 
@@ -161,7 +183,7 @@ class SeLogerCrawler(BasicItem):
         }
 
         for key, selector in selectors.items():
-            self.item[key] = self.tree.xpath(selector)
+            self.item[key] = self.html.xpath(selector)
 
     def parse_details(self):
 
@@ -209,7 +231,7 @@ class SeLogerCrawler(BasicItem):
         }
 
         for key, selector in geocodes.items():
-            raw_coord = self.tree.xpath(selector)[0]
+            raw_coord = self.html.xpath(selector)[0]
             if raw_coord:
                 geocodes[key] = float(raw_coord)
 
@@ -262,7 +284,6 @@ class SeLogerCrawler(BasicItem):
         del(self.item['details'])
 
     def run(self):
-        self.get_tree()
         self.get_item()
         self.parse_details()
         self.clean_item()

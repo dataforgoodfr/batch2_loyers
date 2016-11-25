@@ -28,13 +28,12 @@ def pap_test():
 def seloger_test():
     
     url = (
-        'http://www.seloger.com/annonces/locations/appartement/paris-5eme-75/val-de-grace/114459369.htm?cp=75&idtt=1&idtypebien=1&tri=initial'
+        'http://www.seloger.com/annonces/locations/appartement/paris-6eme-75/odeon/114076879.htm'
     )
 
     crawler = SeLogerCrawler(url)
     crawler.run()
 
-    print (crawler.item['area'])
     assert type(crawler.item['rent_cc']) == float
     assert type(crawler.item['desc']) == str
     assert type(crawler.item['url']) == str
@@ -51,3 +50,4 @@ def seloger_test():
 
 if __name__ == '__main__':
     run_tests()
+
