@@ -2,7 +2,7 @@
 
 import os, sqlite3
 from flask import Flask, request, g, render_template
-from crawlers import PapCrawler, LogCrawler
+from crawlers_beta import PapCrawler, LogCrawler
 
 # create application
 app = Flask(__name__)
