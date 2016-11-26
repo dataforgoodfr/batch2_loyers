@@ -212,7 +212,7 @@ class SeLogerCrawler(object):
             latitude = (codes['ne_lat'] + codes['sw_lat']) / 2.
             longitude = (codes['ne_lon'] + codes['sw_lon']) / 2.
             coord = [latitude, longitude]
-            self.coord_method = 'center_of_area'
+            self.coord_method = 'center'
 
         assert type(coord) == list
         assert len(coord) == 2
@@ -277,7 +277,8 @@ class SeLogerCrawler(object):
                 self.year_method = 'details'
                 self.year = year
         if not year:
-            results = get_year(self.coord, self.subarea)
+            results = get_year(self.coord, self.subarea, 
+                               method=self.coord_method)
             self.year_method = results['method']
             self.year = results['year']
         assert type(self.year) == int

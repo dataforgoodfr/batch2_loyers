@@ -8,7 +8,7 @@ data_path = os.path.join(file_path, 'construction_year.csv')
 data = pd.read_csv(data_path)
 
 
-def get_year(lat_long, subarea):
+def get_year(lat_long, subarea, method='exact'):
     ''' Get the year of construction from different methods :
     computes the shortest distance to a building with known
     construction year (1) or from the median construction
@@ -27,7 +27,7 @@ def get_year(lat_long, subarea):
     shortest_distance = subcoord.ix[subcoord['distance'].argmin()]
     year = shortest_distance['construction']
     
-    if pd.isnull(year):
+    if pd.isnull(year) or method == 'center':
         result['year'] = int(subcoord['construction'].median())
         result['method'] = 'median'
     else:
