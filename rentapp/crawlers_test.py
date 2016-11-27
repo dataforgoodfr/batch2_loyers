@@ -1,16 +1,17 @@
-from crawlers import PapCrawler, SeLogerCrawler
+from crawlers_beta import PapCrawler, SeLogerCrawler
 
 def run_tests():
-    # pap_test()
-    seloger_test()
+    pap_test()
+    # seloger_test()
 
 def pap_test():
     
     url = 'http://www.pap.fr/annonce/locations-paris-75-g439-r413900125?u=1'
     crawler = PapCrawler(url)
+    data = crawler.__dict__
 
-    print ('scraping_time : ', crawler.scraping_time)
-    print ('status : ', crawler.status )
+    for key, attr in data.items():
+        print (key, ' : ', attr)
 
 def seloger_test():
     
@@ -19,9 +20,11 @@ def seloger_test():
     )
 
     crawler = SeLogerCrawler(url)
+    data = crawler.__dict__
+    print (data)
 
-    print ('scraping_time : ', crawler.scraping_time)
-    print ('status : ', crawler.status )
+    print ('scraping_time : ', data['scraping_time'])
+    print ('status : ', data['status'] )
 
 if __name__ == '__main__':
     run_tests()

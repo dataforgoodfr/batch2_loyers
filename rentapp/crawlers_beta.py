@@ -14,6 +14,9 @@ def get_digits(text, dtype):
 def remove_spaces(text):
     return re.sub(r'[\n\r\t]', ' ', text)
 
+def text_to_unicode(text):
+    return unidecode(text)
+
 # ERRORS
 
 class ParsingError(Exception):
@@ -50,10 +53,13 @@ class PapCrawler(object):
         self.get_coord()
         self.get_furnitures()
         self.get_subarea()
+        self.get_details()
+        self.get_surface()
+        self.get_rooms()
+        self.get_description()
+        self.get_year()
         self.get_charges()
         self.get_price()
-        self.get_surface()
-        self.get_year()
         self.close()
 
     def get_html(self):
@@ -104,9 +110,48 @@ class PapCrawler(object):
 
     def get_subarea(self):
         assert self.coord
-        subarea = get_quarter(self.coord)
-        assert type(subarea) == str
-        self.subarea = subarea
+        result = get_quarter(self.coord)
+        assert type(result) == dict
+        self.subarea = result['quarter']
+        self.area = int(result['area'])
+
+    def get_details(self):
+        selector = '//ul[@class="item-summary"]//li'
+        details = self.html.xpath(selector)
+        self.details = details
+
+    def get_surface(self):
+        for detail in self.details:
+            text = detail.xpath('strong/text()')
+            if 'Su' in detail.text:
+                surface = text[0]
+        surface = get_digits(surface, float)
+        assert type(surface) == float
+        self.surface = surface
+
+    def get_rooms(self):
+        for detail in self.details:
+            text = detail.xpath('strong/text()')
+            if 'Pi' in detail.text:
+                rooms = text[0]
+        rooms = get_digits(rooms, int)
+        assert type(rooms) == int
+        self.rooms = rooms
+
+    def get_description(self):
+        selector = '//p[@class="item-description"]/text()'
+        raw_description = self.html.xpath(selector)
+        description = ''.join(raw_description)
+        assert type(description) == str
+        description = remove_spaces(description)
+        description = text_to_unicode(description)
+        self.description = description
+
+
+    def get_year(self):
+        results = get_year(self.coord, self.subarea)
+        self.year_method = results['method']
+        self.year = results['year']
 
     def get_charges(self):
         # prediction here
@@ -118,26 +163,11 @@ class PapCrawler(object):
         price = get_digits(raw_price, float)
         assert type(price) == float
         self.price = price # minus charges
-        self.charges_included = False
-
-    def get_surface(self):
-        selector = '//ul[@class="item-summary"]//li'
-        elements = self.html.xpath(selector)
-        for element in elements:
-            text = element.xpath('strong/text()')
-            if 'Su' in element.text:
-                surface = text[0]
-        surface = get_digits(surface, float)
-        assert type(surface) == float
-        self.surface = surface
-
-    def get_year(self):
-        results = get_year(self.coord, self.subarea)
-        self.year_method = results['method']
-        self.year = results['year']
+        self.charges_included = True
 
     def close(self):
-        del(self.html, self.response)
+        del(self.html, self.response, 
+            self.title, self.details)
         end = datetime.datetime.now()
         self.scraping_time = end - self.start
 
@@ -284,6 +314,7 @@ class SeLogerCrawler(object):
         assert type(self.year) == int
 
     def close(self):
-        del(self.html, self.response, self.details)
+        del(self.html, self.response, 
+            self.details, self.title)
         end = datetime.datetime.now()
         self.scraping_time = end - self.start

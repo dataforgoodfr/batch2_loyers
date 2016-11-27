@@ -8,7 +8,7 @@ data_path = os.path.join(file_path, 'quarters.csv')
 
 """ Python module inferrring the quarter of the city from the coordinates of the flat
     get_quarter is the function of interest. It takes a tuple (latitude,longitude) as input.
-    The output is a string."""
+    The output is a dict with 'quarter' as subarea and 'area' for the area code."""
 
 def get_polygons(coord):
     return mplPath.Path([(coord[0], coord[1]) for coord in eval(coord)])
@@ -22,10 +22,10 @@ def get_quarter(lat_long):
     quarters = []
     for i in range(quarter_coordinates.shape[0]):
         if quarter_coordinates["polygon"][i].contains_point(lat_long):
-            quarters.append(quarter_coordinates["quarter"][i])
+            quarters.append(quarter_coordinates[["quarter", "area"]].ix[i])
 
     if len(quarters) == 1:
-        return quarters[0]
+        return dict(quarters[0])
     else:
         return "unknown"
 
