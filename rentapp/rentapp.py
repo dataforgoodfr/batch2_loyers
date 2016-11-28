@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os, sqlite3
+import pandas as pd
 from flask import Flask, request, g, render_template
-from crawlers_beta import PapCrawler, LogCrawler
+from flask_wtf import FlaskForm
+from wtforms import StringField, DecimalField, \
+SelectField, IntegerField
+from wtforms.validators import DataRequired
+from crawlers_beta import PapCrawler, SeLogerCrawler
+
+## APP
 
 # create application
 app = Flask(__name__)
@@ -48,37 +55,64 @@ def initdb_command():
     init_db()
     print ('Initialized the database.')
 
+## FORMS
+
+# read data for multiselect menu
+file_path = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.join(file_path, 'utils/quarters.csv')
+choices = pd.read_csv(data_path)['quarter'].tolist()
+choices = [(i, j) for i, j in enumerate(choices)]
+
+# create forms
+
+class UrlForm(FlaskForm):
+    input_url = StringField('input_url', validators=[DataRequired()])
+
+class ValidationForm(FlaskForm):
+    price = DecimalField('price')
+    subarea = SelectField('subarea', coerce=str)
+    surface = DecimalField('surface')
+    year = IntegerField('year')
+    rooms = IntegerField('rooms')
+
+## BEHAVIOUR
+
 @app.route('/')
 def index():
-    '''Index Page
-    '''
-    return render_template('index.html', url=None)
+    form = UrlForm()
+    return render_template('base.html', form=form)
 
 @app.route('/', methods=['POST'])
 def show_query_results():
-    '''Index + scraper data
-    '''
-    url = request.form['input_url']
-    assert type(url) == str
-    attributes = run_crawler(url)
-    return render_template('index.html', attr=attributes)
-
-def run_crawler(url):
-    '''Parse site from url and run the corresponding
-    spider
-    '''
+    url = request.form.get('input_url')
+    
     if 'pap' in url:
         crawler = PapCrawler(url)
+        status = True
     elif 'seloger' in url:
-        crawler = LogCrawler(url)
-    elif 'leboncoin' in url:
-        crawler = LbcCrawler(url)
+        crawler = SeLogerCrawler(url)
+        status = True
     else:
-        parser.error('url cannot be parsed')
-        sys.exit(-1)
+        status = False
+    
+    item = crawler.__dict__
+    validation = ValidationForm()
+    validation.price.default = item['price']
+    validation.subarea.default = item['subarea']
+    validation.subarea.choices = choices
+    validation.surface.default = item['surface']
+    validation.rooms.default = item['rooms']
+    validation.year.default = item['year']
+    form = UrlForm()
+    return render_template('base.html', 
+                           form=form,
+                           validation=validation)
 
-    crawler.run()
-    return crawler.item
+@app.route('/results', methods=['POST'])
+def show_actual_price():
+    result = 100
+    return render_template('index.html', item=app.item, result=result)
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
