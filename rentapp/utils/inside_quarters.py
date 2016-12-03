@@ -5,8 +5,9 @@ import os
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(file_path, 'quarters.csv')
+refs_path = os.path.join(file_path, 'refs_beta.csv')
 
-""" Python module inferrring the quarter of the city from the coordinates of the flat
+""" Python module inferring the quarter of the city from the coordinates of the flat
     get_quarter is the function of interest. It takes a tuple (latitude,longitude) as input.
     The output is a dict with 'quarter' as subarea and 'area' for the area code."""
 
@@ -43,3 +44,37 @@ def get_median(quarter):
     else:
         return None
 
+
+def get_options():
+    ''' return all possible subareas as list of tuples
+    '''
+    subareas = quarter_coordinates['quarter'].tolist()
+    return [(i, j) for i, j in enumerate(subareas)]
+
+def get_choice(options, area):
+    ''' return actual choice from list of possible choices
+    '''
+    return [i[1] for i in options].index(area)
+
+
+def get_refs(item, year=2016):
+    ''' return refs for given item
+    '''
+    df = pd.read_csv(refs_path)
+    item['year'] = int(item['year'])
+    item['rooms'] = int(item['rooms'])
+    df = df[df['min_year'] < item['year']]
+    df = df[df['max_year'] > item['year']]
+    df = df[df['nameZone'] == item['subarea']]
+    df = df[df['type'] == item['furnitures']]
+    df = df[df['piece'] == item['rooms']]
+    df = df[df['annee'] == year].squeeze()
+
+    '''
+    vals = df.ix[(df['nameZone'] == item['subarea']) &
+                 (df['type'] == item['furnitures']) &
+                 (df['piece'] == item['rooms']) &
+                 (df['annee'] == year)].squeeze()
+    '''
+    
+    return df[['ref', 'refmin', 'refmaj']].to_dict()

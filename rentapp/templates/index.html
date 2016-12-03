@@ -1,46 +1,65 @@
-{% extends 'base.html' %}
-{% block head %}
-<div class=details>
-  <p>Voici les informations que nous avons 
-     pu collecter à propos de cette annonce :</p>
-  <form action="/result" method="POST">
-    <table>
-      <tr>
-        <td>Loyer (hors charges)</td>
-        <td><input type="text" name="input_price" value="{{item['price']}}"></td>
-      </tr>
-      <tr>
-        <td>Nombre de pièces</td>
-        <td><input type="text" name="input_rooms" value="{{item['rooms']}}"></td>
-      </tr>
-      <tr>
-        <td>Année de construction</td>
-        <td><input type="text" name="input_year" value="{{item['year']}}"></td>
-      </tr>
-      <tr>
-        <td>Surface habitable</td>
-        <td><input type="text" name="input_surface" value="{{item['surface']}}"></td>
-      </tr>
-      <tr>
-        <td>Quartier</td>
-          <select>
-            {% for choice in choices %}
-              <option value="{{choice}}">
-              {{choice}}</option>
-            {% endfor %}
-         </select>
+{% from "_formhelpers.html" import render_field %}
+{% extends "base.html" %}
 
-        <td><input type="text" name="input_area" value="{{item['area']}}"></td>
-      </tr>
-    </table>
-  </form>
-<div class=details>
+{% block url_form %}
+<h2>Url Form</h2>
+ <form action="/scraping" method="POST">
+ {{ urlform.hidden_tag() }}
+  <p>{{ urlform.url }}<input type=submit value="C'est parti!"></p>
+ </form>
 {% endblock %}
 
+{% block attr_form %}
+<h2>Attribute Form</h2>
+ <form action="/validation" method="POST">
+  {{ form.hidden_tag() }}
+  <table>
+   <tr>
+   	<td>Loyer (hors charges)</td>
+   	<td>{{ render_field(form.price) }}</td>
+   </tr>
+   <tr>
+   	<td>Surface</td>
+   	<td>{{ render_field(form.surface) }}</td>
+   </tr>
+   <tr>
+   	<td>Année de construction</td>
+   	<td>{{ render_field(form.year) }}</td>
+   </tr>
+   <tr>
+   	<td>Nombre de pièces</td>
+   	<td>{{ render_field(form.rooms) }}</td>
+   </tr>
+   <tr>
+   	<td>Quartier administratif</td>
+   	<td>{{ render_field(form.subarea) }}</td>
+   </tr>
+  </table>
+  <input type=submit value="Je valide"></p>
+ </form>
+{% endblock %}
 
-<!-- {% if valid %}
-<div class=result>
-  <p>Voici les informations que nous avons 
-     pu collecter à propos de cette annonce :</p>
-<div class=result>
-{% endif %} -->
+{% block results %}
+<h2>Results</h2>
+ <table>
+   <tr>
+    <td>Loyer proposé</td>
+    <td>{{ refs['price'] }}</td>
+   </tr>
+   <tr>
+    <td>Loyer de référence</td>
+    <td>{{ refs['ref'] }}</td>
+   </tr>
+   <tr>
+    <td>Loyer minimum</td>
+    <td>{{ refs['refmin'] }}</td>
+   </tr>
+   <tr>
+    <td>Loyer maximum</td>
+    <td>{{ refs['refmaj'] }}</td>
+   </tr>
+  </table>
+ <form action="/" method="POST">
+  <input type=submit value="Un autre?"></p>
+ </form>
+{% endblock %}

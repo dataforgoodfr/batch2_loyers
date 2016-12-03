@@ -169,7 +169,8 @@ class PapCrawler(object):
         del(self.html, self.response, 
             self.title, self.details)
         end = datetime.datetime.now()
-        self.scraping_time = end - self.start
+        self.scraping_time = str(end - self.start)
+        self.start = str(self.start) # str because json
 
 
 # SE LOGER

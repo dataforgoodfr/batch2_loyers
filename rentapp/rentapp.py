@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os, sqlite3
-import pandas as pd
-from flask import Flask, request, g, render_template
+from crawlers_beta import PapCrawler
+from utils.inside_quarters import get_options, get_choice, get_refs
+from flask import Flask, request, g, render_template, redirect, url_for, session
 from flask_wtf import FlaskForm
+from wtforms.validators import DataRequired
 from wtforms import StringField, DecimalField, \
 SelectField, IntegerField
-from wtforms.validators import DataRequired
-from crawlers_beta import PapCrawler, SeLogerCrawler
 
 ## APP
 
@@ -20,7 +20,7 @@ app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'rentapp.db'),
     SECRET_KEY='development key',
     USERNAME='admin',
-    PASSWORD='default'
+    PASSWORD='default',
 ))
 
 # override config from an environment variable
@@ -57,61 +57,86 @@ def initdb_command():
 
 ## FORMS
 
-# read data for multiselect menu
-file_path = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(file_path, 'utils/quarters.csv')
-choices = pd.read_csv(data_path)['quarter'].tolist()
-choices = [(i, j) for i, j in enumerate(choices)]
-
-# create forms
-
 class UrlForm(FlaskForm):
-    input_url = StringField('input_url', validators=[DataRequired()])
+    url = StringField('url', validators=[DataRequired()])
 
-class ValidationForm(FlaskForm):
-    price = DecimalField('price')
-    subarea = SelectField('subarea', coerce=str)
-    surface = DecimalField('surface')
-    year = IntegerField('year')
-    rooms = IntegerField('rooms')
+class AttrForm(FlaskForm):
+    price = DecimalField('price', validators=[DataRequired()])
+    subarea = SelectField('subarea', coerce=int)
+    surface = DecimalField('surface', validators=[DataRequired()])
+    year = IntegerField('year', validators=[DataRequired()])
+    rooms = IntegerField('rooms', validators=[DataRequired()])
+
 
 ## BEHAVIOUR
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    form = UrlForm()
-    return render_template('base.html', form=form)
+    urlform = UrlForm()
+    display = {'url': True, 'fill' : False, 'valid' : False}
+    return render_template('index.html', display=display, urlform=urlform)
 
-@app.route('/', methods=['POST'])
-def show_query_results():
-    url = request.form.get('input_url')
+@app.route('/scraping', methods=['POST'])
+def scraping():
+    # get url
+    url = request.form['url']
     
-    if 'pap' in url:
-        crawler = PapCrawler(url)
-        status = True
-    elif 'seloger' in url:
-        crawler = SeLogerCrawler(url)
-        status = True
-    else:
-        status = False
-    
-    item = crawler.__dict__
-    validation = ValidationForm()
-    validation.price.default = item['price']
-    validation.subarea.default = item['subarea']
-    validation.subarea.choices = choices
-    validation.surface.default = item['surface']
-    validation.rooms.default = item['rooms']
-    validation.year.default = item['year']
-    form = UrlForm()
-    return render_template('base.html', 
-                           form=form,
-                           validation=validation)
+    # scraping
+    try:
+        if 'pap' in url:
+            crawler = PapCrawler(url)
+        else:
+            raise
+    except:
+        return redirect(url_for('index'))
 
-@app.route('/results', methods=['POST'])
-def show_actual_price():
-    result = 100
-    return render_template('index.html', item=app.item, result=result)
+    session['item'] = crawler.__dict__
+    return redirect(url_for('validation'))
+
+@app.route('/validation', methods=['GET', 'POST'])
+def validation():
+    # initiate form
+    item = session.get('item', None)
+    form = AttrForm(request.form)
+
+    # pre-fill validation
+    form.price.data = item['price']
+    form.surface.data = item['surface']
+    form.rooms.data = item['rooms']
+    form.year.data = item['year']
+
+    # get area options and pre-fill
+    options = get_options()
+    form.subarea.choices = options
+    form.subarea.data = get_choice(options, item['subarea'])
+
+    # catch errors
+    if not form.validate_on_submit():
+        display = {'url': False, 'fill' : True, 'valid' : False}
+        return render_template('index.html', display=display, form=form)
+
+    # id to area
+    id_quartier = int(request.form['subarea'])
+    item['subarea'] = options[id_quartier][1]
+
+    # set new values
+    item['price'] = request.form['price']
+    item['surface'] = request.form['surface']
+    item['rooms'] = request.form['rooms']
+    item['year'] = request.form['year']
+
+    session['item'] = item
+    return redirect(url_for('results'))
+
+@app.route('/results', methods=['GET', 'POST'])
+def results():
+    item = session.get('item', None)
+    refs = get_refs(item)
+    for key, value in refs.items():
+        refs[key] = round(float(item['surface']) * value, 1)
+    refs['price'] = item['price']
+    display = {'url': False, 'fill' : False, 'valid' : True}
+    return render_template('index.html', display=display, refs=refs)
 
 
 if __name__ == '__main__':

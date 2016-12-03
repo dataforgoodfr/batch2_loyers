@@ -1,40 +1,18 @@
 <!doctype html>
-<title>Scrapr</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-
-<h1>Scrapr</h1>
-<p> Entrez une adresse dans le champ ci-dessous : </p>
-<form action="/" method="POST">
-  <p>{{ form.input_url }}<input type=submit value="C'est parti!"></p>
-</form>
-
-{% if validation %}
-<div class=details>
-  <p>Voici les informations que nous avons 
-     pu collecter à propos de cette annonce :</p>
-  <form action="/" method="POST">
-    <table>
-      <tr>
-        <td>Loyer (hors charges)</td>
-        <td>{{ validation.price }}</td>
-      </tr>
-      <tr>
-        <td>Nombre de pièces</td>
-        <td>{{ validation.rooms }}</td>
-      </tr>
-      <tr>
-        <td>Année de construction</td>
-        <td>{{ validation.year }}</td>
-      </tr>
-      <tr>
-        <td>Surface habitable</td>
-        <td>{{ validation.surface }}</td>
-      </tr>
-      <tr>
-        <td>Quartier</td>
-        <td>{{ validation.subarea }}</td>
-      </tr>
-    </table>
-  </form>
-<div class=details>
-{% endif %}
+<html>
+  <head>
+    <title>RentApp</title>
+  </head>
+  <body>
+    <h1>RentApp</h1>
+    {% if display['url'] %}
+    {% block url_form %}{% endblock %}
+    {% endif %}
+    {% if display['fill'] %}
+    {% block attr_form %}{% endblock %}
+    {% endif %}
+    {% if display['valid'] %}
+    {% block results %}{% endblock %}
+    {% endif %}
+  </body>
+</html>
