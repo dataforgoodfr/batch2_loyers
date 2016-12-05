@@ -3,8 +3,8 @@
 import re, datetime, requests
 from lxml import html
 from unidecode import unidecode
-from utils.inside_quarters import get_quarter
-from utils.construction_year import get_year
+from utils.inside_quarters import get_quarter, fuzz_quarter, \
+get_year
 
 # UTILS
 
@@ -50,13 +50,14 @@ class PapCrawler(object):
         self.parse_html()
         self.get_title()
         self.get_ref()
+        self.get_description()
         self.get_coord()
         self.get_furnitures()
+        self.get_area()
         self.get_subarea()
         self.get_details()
         self.get_surface()
         self.get_rooms()
-        self.get_description()
         self.get_year()
         self.get_charges()
         self.get_price()
@@ -90,16 +91,30 @@ class PapCrawler(object):
         assert type(ref) == str
         self.ref = ref
 
+    def get_description(self):
+        selector = '//p[@class="item-description"]/text()'
+        raw_description = self.html.xpath(selector)
+        description = ''.join(raw_description)
+        assert type(description) == str
+        description = remove_spaces(description)
+        description = text_to_unicode(description)
+        self.description = description
+
     def get_coord(self):
-        selector = '//div[@class="map-annonce-adresse"]/@data-mappy'
-        raw_coord = str(self.html.xpath(selector)[0])
-        regex = r"[-+]?\d*\.\d+|\d+"
-        str_coord = re.findall(regex, raw_coord)[:2]
-        clean_coord = [float(x) for x in str_coord]
-        assert type(clean_coord) == list
-        assert len(clean_coord) == 2
-        self.coord = clean_coord
-        self.coord_method = 'exact'
+        try:
+            selector = '//div[@class="map-annonce-adresse"]/@data-mappy'
+            raw_coord = str(self.html.xpath(selector)[0])
+            regex = r"[-+]?\d*\.\d+|\d+"
+            str_coord = re.findall(regex, raw_coord)[:2]
+            clean_coord = [float(x) for x in str_coord]
+            assert type(clean_coord) == list
+            assert len(clean_coord) == 2
+            self.coord = clean_coord
+            self.coord_method = 'exact'
+        except:
+            # if no coord try fuzzy matching later
+            self.coord = None
+            self.coord_method = 'no_data'
 
     def get_furnitures(self):
         assert type(self.title) == str
@@ -108,12 +123,20 @@ class PapCrawler(object):
         else:
             self.furnitures = False
 
+    def get_area(self):
+        selector = '//div[@class="item-geoloc"]/h2/text()'
+        raw_area = self.html.xpath(selector)[0]
+        self.area = int(re.findall('\d+', raw_area)[0])
+        assert type(self.area) == int
+
     def get_subarea(self):
-        assert self.coord
-        result = get_quarter(self.coord)
-        assert type(result) == dict
-        self.subarea = result['quarter']
-        self.area = int(result['area'])
+        if self.coord:
+            result = get_quarter(self.coord)
+            assert type(result) == dict
+            self.subarea = result['quarter']
+            # self.area = int(result['area'])
+        else:
+            self.subarea = fuzz_quarter(self.description) # try fuzzy matching
 
     def get_details(self):
         selector = '//ul[@class="item-summary"]//li'
@@ -138,18 +161,8 @@ class PapCrawler(object):
         assert type(rooms) == int
         self.rooms = rooms
 
-    def get_description(self):
-        selector = '//p[@class="item-description"]/text()'
-        raw_description = self.html.xpath(selector)
-        description = ''.join(raw_description)
-        assert type(description) == str
-        description = remove_spaces(description)
-        description = text_to_unicode(description)
-        self.description = description
-
-
     def get_year(self):
-        results = get_year(self.coord, self.subarea)
+        results = get_year(self.coord, self.subarea, self.area)
         self.year_method = results['method']
         self.year = results['year']
 

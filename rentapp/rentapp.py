@@ -82,14 +82,16 @@ def scraping():
     url = request.form['url']
     
     # scraping
-    try:
-        if 'pap' in url:
-            crawler = PapCrawler(url)
-        else:
-            raise
+    
+    if 'pap' in url:
+        crawler = PapCrawler(url)
+    else:
+        raise Exception()
+    '''
     except:
         return redirect(url_for('index'))
-
+    '''
+    # get data from crawl
     session['item'] = crawler.__dict__
     return redirect(url_for('validation'))
 
@@ -121,9 +123,13 @@ def validation():
 
     # set new values
     item['price'] = request.form['price']
-    item['surface'] = request.form['surface']
-    item['rooms'] = request.form['rooms']
-    item['year'] = request.form['year']
+    item['surface'] = float(request.form['surface'])
+    item['rooms'] = int(request.form['rooms'])
+    item['year'] = int(request.form['year'])
+
+    # max rooms == 4
+    if item['rooms'] > 4:
+        item['rooms'] = 4
 
     session['item'] = item
     return redirect(url_for('results'))
