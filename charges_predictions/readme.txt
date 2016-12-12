@@ -1,7 +1,7 @@
 Charge prediction
 -----------------
 
-The predictor is saved as a pkl object in the folder ./prediction.
+The predictor is saved as a pkl object in the folder ./predictions
 
 In order to import this regressor, run the 2 following lines:
 >> from sklearn.externals import joblib
