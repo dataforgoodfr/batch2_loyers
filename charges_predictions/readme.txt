@@ -57,7 +57,7 @@ X_train: 3546 samples
 X_test: 1183 samples
 
 Here are a few metrics on the test of this regressor:
-Avg error: 29.6115296495
-Percentiles errors: [  7.853   19.157   42.0885  70.578 ] (for percentiles [25, 50, 75, 90])
+Avg error: 29.3911641448
+Percentiles errors: [  7.6835  19.545   39.566   67.8098] (for percentiles [25, 50, 75, 90])
 
-Last update: 2016-12-12
+Last update: 2016-12-13
