@@ -6,7 +6,7 @@ def run_tests():
 
 def pap_test():
     
-    url = 'http://www.pap.fr/annonce/locations-paris-75-g439-r413900125?u=1'
+    url = 'http://www.pap.fr/annonces/appartement-paris-17e-r414100572'
     crawler = PapCrawler(url)
     data = crawler.__dict__
 

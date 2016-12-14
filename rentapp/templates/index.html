@@ -1,68 +1,87 @@
 {% from "_formhelpers.html" import render_field %}
+{% from "_formhelpers.html" import render_radio %}
 {% extends "base.html" %}
 
+
+
 {% block url_form %}
-<p> Veuillez indiquer ci-dessous l'adresse URL de l'annonce consultée </p>
-<p> NB : cette application fonctionne uniquement avec les annonces de
-www.pap.fr pour le moment.</p>
- <form action="/scraping" method="POST">
- {{ urlform.hidden_tag() }}
-  <p>{{ urlform.url }}<input type=submit value="C'est parti!"></p>
- </form>
+<p>Veuillez indiquer çi-dessous l'adresse URL d'une annonce immobilière :</p>
+  <form action="/scraping" method="POST">
+    <div class="field">
+    {{ urlform.hidden_tag() }}
+    {{ urlform.url }}<p><input type=submit value="C'est parti!"></p>
+    </div>
+  </form>
+<div>
+  <p>L'opération peut prendre plusieurs secondes dans certains cas. Cette application ne fonctionne pour l'instant qu'avec les annonces de biens locatifs parisiens (75) publiées sur www.pap.fr.</p>
+</div>
 {% endblock %}
+
+
+
+{% block pred_form %}
+<p> Merci de vérifier les informations suivantes pour nous aider à affiner notre recherche. </p>
+  <form action="/prediction" method="POST" name="pred_form">
+    {{ pred_form.hidden_tag() }}
+    
+    <p>Le loyer proposé est de {{ item['price'] }} euros. Les charges sont-elles comprises?</p>
+    <table>
+      {{ render_radio(pred_form.included) }}
+    </table>
+
+    <p>Si c'est le cas, à combien s'élèvent les charges? *</p>
+    <table>
+      {{ render_field(pred_form.charges) }}
+    </table>
+
+    <p><input type=submit value="C'est bon!"></p>
+  </form>
+{% endblock %}
+
+
 
 {% block attr_form %}
-<p> Voici les informations que nous avons pu collecter sur cette annonce. </p>
-<p> Si une information vous semple erronée, vous pouvez la corriger. </p>
- <form action="/validation" method="POST">
-  {{ form.hidden_tag() }}
-  <table>
-   <tr>
-   	<td>Loyer (hors charges)</td>
-   	<td>{{ render_field(form.price) }}</td>
-   </tr>
-   <tr>
-   	<td>Surface</td>
-   	<td>{{ render_field(form.surface) }}</td>
-   </tr>
-   <tr>
-   	<td>Année de construction</td>
-   	<td>{{ render_field(form.year) }}</td>
-   </tr>
-   <tr>
-   	<td>Nombre de pièces</td>
-   	<td>{{ render_field(form.rooms) }}</td>
-   </tr>
-   <tr>
-   	<td>Quartier administratif</td>
-   	<td>{{ render_field(form.subarea) }}</td>
-   </tr>
-  </table>
-  <input type=submit value="Je valide"></p>
- </form>
+<p> Voici les informations que nous avons pu collecter sur cette annonce. Si une information vous semble erronée, vous pouvez la corriger ici. : </p>
+  <form action="/validation" method="POST" name="attr_form">
+    {{ attr_form.hidden_tag() }}
+    
+    <table>
+      <tr>
+        <td>Loyer (charges comprises)</td>
+        <td>{{ render_field(attr_form.price) }}</td>
+      </tr>
+      <tr>
+        <td>Charges locatives</td>
+        <td>{{ render_field(attr_form.charges) }}</td>
+      </tr>
+      <tr>
+   	    <td>Surface</td>
+   	    <td>{{ render_field(attr_form.surface) }}</td>
+      </tr>
+      <tr>
+   	    <td>Année de construction</td>
+   	    <td>{{ render_field(attr_form.year) }}</td>
+      </tr>
+      <tr>
+   	    <td>Nombre de pièces</td>
+   	    <td>{{ render_field(attr_form.rooms) }}</td>
+      </tr>
+      <tr>
+   	    <td>Quartier administratif</td>
+   	    <td>{{ render_field(attr_form.subarea) }}</td>
+      </tr>
+    </table>
+    <p><input type=submit value="Je valide"></p>
+  </form>
 {% endblock %}
 
+
+
 {% block results %}
-<p> Les loyers de référence valent pour l'année 2016 : </p>
- <table>
-   <tr>
-    <td>Loyer proposé</td>
-    <td>{{ refs['price'] }}</td>
-   </tr>
-   <tr>
-    <td>Loyer de référence</td>
-    <td>{{ refs['ref'] }}</td>
-   </tr>
-   <tr>
-    <td>Loyer minimum</td>
-    <td>{{ refs['refmin'] }}</td>
-   </tr>
-   <tr>
-    <td>Loyer maximum</td>
-    <td>{{ refs['refmaj'] }}</td>
-   </tr>
-  </table>
+
+ {{ graph | safe }}
+
  <form action="/" method="POST">
-  <input type=submit value="Un autre?"></p>
+ <p><input type=submit value="Un autre?"></p> 
  </form>
 {% endblock %}

@@ -9,3 +9,12 @@
   {% endif %}
   </dd>
 {% endmacro %}
+
+{% macro render_radio(field) %}
+  <tr>
+  {% for subfield in field %}
+    <td>{{ subfield }}</td>
+    <td>{{ subfield.label }}</td>
+  {% endfor %}
+  </tr>
+{% endmacro %}
