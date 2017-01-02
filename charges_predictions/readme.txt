@@ -12,7 +12,7 @@ Note: scikit learn has to be installed.
 This object (regressor) is a scikit-learn random forest.
 
 If you want to predict the charge on a dataset X, run:
->> y_pred = regressor.predict(X)
+>> y_pred = regressor.predict(X) * 78.80818240182575 + 124.9107633749207
 
 X has to be an array where each line is a sample (an advertisement for which the charge prediction has to be made).
 The columns of X are the different features. They are (is this order):
@@ -57,7 +57,7 @@ X_train: 3546 samples
 X_test: 1183 samples
 
 Here are a few metrics on the test of this regressor:
-Avg error: 29.3911641448
-Percentiles errors: [  7.6835  19.545   39.566   67.8098] (for percentiles [25, 50, 75, 90])
+Avg error: 29.434248599
+Percentiles errors: [  7.6055      20.484       41.40761905  68.8086    ] (for percentiles [25, 50, 75, 90])
 
-Last update: 2016-12-13
+Last update: 2017-1-2
