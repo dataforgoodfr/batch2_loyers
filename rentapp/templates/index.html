@@ -5,7 +5,7 @@
 
 
 {% block url_form %}
-<p>Veuillez indiquer çi-dessous l'adresse URL d'une annonce immobilière :</p>
+<p>Veuillez indiquer çi-dessous l'adresse URL d'une annonce immobilière. Notez que l'opération peut prendre plusieurs secondes dans certains cas.  :</p>
   <form action="/scraping" method="POST">
     <div class="field">
     {{ urlform.hidden_tag() }}
@@ -13,7 +13,7 @@
     </div>
   </form>
 <div>
-  <p>L'opération peut prendre plusieurs secondes dans certains cas. Cette application ne fonctionne pour l'instant qu'avec les annonces de biens locatifs parisiens (75) publiées sur www.pap.fr.</p>
+  <p>Cette application ne fonctionne pour l'instant qu'avec les annonces de biens locatifs parisiens (75) publiées sur le site d'annonces immobilières <a href="http://www.pap.fr">Particulier à particulier</a>. Nous ajouterons d'autres sites dans le futur.</p>
 </div>
 {% endblock %}
 
@@ -41,7 +41,7 @@
 
 
 {% block attr_form %}
-<p> Voici les informations que nous avons pu collecter sur cette annonce. Si une information vous semble erronée, vous pouvez la corriger ici. : </p>
+<p>Voici les informations que nous avons pu collecter sur cette annonce. Si une information vous semble erronée, vous pouvez la corriger ici. Si vous avez un doute, vous pouvez laisser la valeur par défaut.</p>
   <form action="/validation" method="POST" name="attr_form">
     {{ attr_form.hidden_tag() }}
     
@@ -51,7 +51,7 @@
         <td>{{ render_field(attr_form.price) }}</td>
       </tr>
       <tr>
-        <td>Charges locatives</td>
+        <td>Charges locatives (estimées)</td>
         <td>{{ render_field(attr_form.charges) }}</td>
       </tr>
       <tr>

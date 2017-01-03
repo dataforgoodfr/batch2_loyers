@@ -113,6 +113,7 @@ def validation():
     form.surface.data = item['surface']
     form.rooms.data = item['rooms']
     form.year.data = item['year']
+    form.charges.data = item['charges']
 
     # get area options and pre-fill
     options = get_options()
@@ -137,17 +138,12 @@ def validation():
     item['rooms'] = int(request.form['rooms'])
     item['year'] = int(request.form['year'])
 
-    # charges
-
-    if item['charges']:
-        item['price'] = item['price'] - item['charges']
-    else:
-        prediction = make_prediction(item)
-        item['price'] = item['price'] - prediction
-
     # max rooms == 4
     if item['rooms'] > 4:
         item['rooms'] = 4
+
+    # charges
+    item['price'] = item['price'] - int(item['charges'])
 
     session['item'] = item
     return redirect(url_for('results'))
@@ -170,6 +166,6 @@ def results():
 
 
 if __name__ == '__main__':
-    # port = int(os.environ.get("PORT", 5000))
-    # app.run(host='0.0.0.0', port=port)
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+    # app.run(debug=True)

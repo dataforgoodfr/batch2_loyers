@@ -52,7 +52,14 @@ def make_prediction(item):
     path = os.path.join(file_path, 'models/charges_predictor.pkl')
     regressor = joblib.load(path)
     y_pred = regressor.predict(features.values.reshape(1, -1))
-    print (y_pred)
-    raise Exception()
 
-    return features
+    print (features.values.reshape(1, -1))
+    print (features)
+    
+    # scaling parameters
+    x = 78.80818240182575
+    b = 124.9107633749207
+    f = 1 # to remove
+    y_pred = int((x * y_pred[0] + b) / f)
+
+    return y_pred
