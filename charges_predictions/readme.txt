@@ -1,7 +1,10 @@
 Charge prediction
 -----------------
 
-The predictor is saved as a pkl object in the folder ./predictions
+The prediction is currently based on a set of ads from bienici.com. The python code used to create this databased is in the folder ./data_base_creation
+
+In order to train the regressor (a random forest), you need to run the script ./predictions/train_regressor.py
+The regressor will be trained and saved as a pkl object in the folder ./predictions, and this readme file will be updated.
 
 In order to import this regressor, run the 2 following lines:
 >> from sklearn.externals import joblib
@@ -9,55 +12,52 @@ In order to import this regressor, run the 2 following lines:
 
 Note: scikit learn has to be installed.
 
-This object (regressor) is a scikit-learn random forest.
 
-If you want to predict the charge on a dataset X, run:
->> y_pred = regressor.predict(X) * 78.80818240182575 + 124.9107633749207
-
-X has to be an array where each line is a sample (an advertisement for which the charge prediction has to be made).
+If you want to predict the charge on a dataset X, simply run:
+>> y_pred = regressor.predict(X)
+where X is an array where each line is a sample (an advertisement for which the charge prediction has to be made).
 The columns of X are the different features. They are (is this order):
- - Price
- - Surface
- - Furnished
- - Lift
- - Nb_rooms
- - Paris_2
- - Paris_3
- - Paris_4
- - Paris_5
- - Paris_6
- - Paris_7
- - Paris_8
- - Paris_9
- - Paris_10
- - Paris_11
- - Paris_12
- - Paris_13
- - Paris_14
- - Paris_15
- - Paris_16
- - Paris_17
- - Paris_18
- - Paris_19
- - Paris_20
- - Heating_collectif
- - Heating_individuel
- - Heating_src_electricite
- - Heating_src_fuel
- - Heating_src_gaz
- - Gardien
- - Internet
-
-All these features are generated on the test set in the notebook ./predictions/charge_prediction.ipynb
+List of features (31):
+  - price (float64)
+  - surface (float64)
+  - furnised (int64)
+  - lift (int64)
+  - nb_rooms (int64)
+  - gardien (int64)
+  - internet (int64)
+  - paris_2 (int64)
+  - paris_3 (int64)
+  - paris_4 (int64)
+  - paris_5 (int64)
+  - paris_6 (int64)
+  - paris_7 (int64)
+  - paris_8 (int64)
+  - paris_9 (int64)
+  - paris_10 (int64)
+  - paris_11 (int64)
+  - paris_12 (int64)
+  - paris_13 (int64)
+  - paris_14 (int64)
+  - paris_15 (int64)
+  - paris_16 (int64)
+  - paris_17 (int64)
+  - paris_18 (int64)
+  - paris_19 (int64)
+  - paris_20 (int64)
+  - heating_collective (int64)
+  - heating_individual (int64)
+  - heating_src_electricite (int64)
+  - heating_src_fuel (int64)
+  - heating_src_gaz (int64)
 
 Each line of y_pred is the charge prediction for the corresonding line of X.
 
 This regressor has been generated using a random forest, with scikit learn.
-X_train: 3546 samples
-X_test: 1183 samples
+X_train: 4104 samples
+X_test: 1369 samples
 
 Here are a few metrics on the test of this regressor:
-Avg error: 29.434248599
-Percentiles errors: [  7.6055      20.484       41.40761905  68.8086    ] (for percentiles [25, 50, 75, 90])
+Avg error: 29.3253086547
+Percentiles errors: [  6.592       18.723       39.51833333  67.30946667] (for percentiles [25, 50, 75, 90])
 
-Last update: 2017-1-2
+Last update: 2017-1-11
